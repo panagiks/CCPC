@@ -30,3 +30,8 @@ git clone https://github.com/panagiks/CCPC
 cd CCPC/image
 docker build --build-arg VERIFY_SSL=false --build-arg PROJECT=<project> --build-arg BASE_URL=<url_with_scheme_and_port> --build-arg TOKEN=<token> .
 ```
+
+## Todo
+
+- [ ] Replace prints with standard logging
+- [ ] Add some handling if OC responds with error (if it's actually needed)
