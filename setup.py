@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='ccpc',
-    version='0.0.3',
+    version='0.0.4',
     description='Chaotic Cable Pulling Chimp',
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -22,7 +22,7 @@ setup(
     ],
     keywords='ccpc open shift monkey chaos async OpenShift pod origin',
     url='https://github.com/panagiks/CCPC',
-    download_url='https://github.com/panagiks/CCPC/archive/0.0.3.tar.gz',
+    download_url='https://github.com/panagiks/CCPC/archive/0.0.4.tar.gz',
     author='panagiks',
     license='MIT',
     packages=find_packages(where='src'),
@@ -31,6 +31,7 @@ setup(
     install_requires=[
         'aiohttp',
         'click',
+        'pytz'
     ],
     entry_points={
         'console_scripts': [
