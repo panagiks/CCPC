@@ -19,3 +19,10 @@ Chaotic Cable Pulling Chimp
 `oc policy add-role-to-user view system:serviceaccount:<project>:<account>`
 
 `oc policy add-role-to-user edit system:serviceaccount:<project>:<account>`
+
+## Build docker image
+```sh
+git clone https://github.com/panagiks/CCPC
+cd CCPC/image
+docker build --build-arg VERIFY_SSL=false --build-arg PROJECT=<project> --build-arg BASE_URL=<url_with_scheme_and_port> --build-arg TOKEN=<token> .
+```
