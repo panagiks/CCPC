@@ -1,3 +1,7 @@
+![CCPC logo](resources/images/ccpc_logo.jpg)
+
+***
+
 # CCPC
 Chaotic Cable Pulling Chimp
 
