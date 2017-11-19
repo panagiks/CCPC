@@ -60,7 +60,6 @@ async def scale_deployment_configs(settings):
     for _ in range(chaos_index):
         index = random.randint(0, len(keys)-1)
         to_scale[keys[index]] = dcs.pop(keys[index])
-    print(to_scale)
     tasks = []
     for ep, data in to_scale.items():
         replicas = data['spec']['replicas']
@@ -118,7 +117,7 @@ def main(verify_ssl, ca_path, token, project, own_name, base_url):
     # Make sure we've got https
     url = URL(base_url)
     if url.scheme != 'https':
-        url = url.whit_scheme('https')
+        url = url.with_scheme('https')
     settings = {
         'verify_ssl': verify_ssl,
         'base_url': base_url,
