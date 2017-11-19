@@ -7,9 +7,6 @@ from yarl import URL
 
 
 async def get_pods(settings):
-    settings['list_pods_url'] = '{}/api/v1/namespaces/{}/pods/'.format(
-        settings['base_url'], settings['project']
-    )
     async with settings['session'].get(settings['list_pods_url']) as resp:
             body = await resp.json()
 
@@ -39,9 +36,53 @@ async def delete_pods(settings):
     res = await asyncio.gather(*tasks)
 
 
+async def get_deployment_configs(settings):
+    async with settings['session'].get(settings['list_dcs_url']) as resp:
+        body = await resp.json()
+
+    return {
+        '{}{}/scale'.format(settings['base_url'], dc['metadata']['selfLink']):
+        dc
+        for dc in body['items']
+        if dc['metadata']['labels']['app'] != settings['own_name']
+    }
+
+
+async def scale_deployment_configs(settings):
+    # Get Deployment Configs
+    dcs = await get_deployment_configs(settings)
+    # Decide how many pods to bring down
+    chaos_index = random.randint(0, len(dcs))
+
+    to_scale = {}
+    keys = list(dcs.keys())
+    # Decide which pods to scale
+    for _ in range(chaos_index):
+        index = random.randint(0, len(keys)-1)
+        to_scale[keys[index]] = dcs.pop(keys[index])
+    print(to_scale)
+    tasks = []
+    for ep, data in to_scale.items():
+        replicas = data['spec']['replicas']
+        replicas = replicas - 1 if replicas > 0 else replicas + 1
+        body = {
+            'kind': 'Scale',
+            'apiVersion': 'extensions/v1beta1',
+            'metadata': {
+                'name': data['metadata']['name'],
+                'namespace': data['metadata']['namespace']
+            },
+            'spec': {
+                'replicas': replicas
+            }
+        }
+        tasks.append(settings['session'].put(ep, json=body))
+    res = await asyncio.gather(*tasks)
+
+
 async def master(settings):
     # Decide action
-    actions = [delete_pods, ]
+    actions = [delete_pods, scale_deployment_configs]
     action = actions[random.randint(0, len(actions)-1)]
     # Create connections context
     ctx = {}
@@ -87,6 +128,12 @@ def main(verify_ssl, ca_path, token, project, own_name, base_url):
     }
     if ca_path:
         settings.update({'ca_path': ca_path})
+    settings['list_pods_url'] = '{}/api/v1/namespaces/{}/pods/'.format(
+        settings['base_url'], settings['project']
+    )
+    settings['list_dcs_url'] = '{}/oapi/v1/namespaces/{}/deploymentconfigs/'.format(
+        settings['base_url'], settings['project']
+    )
     loop = asyncio.get_event_loop()
     loop.run_until_complete(master(settings))
 
