@@ -2,7 +2,10 @@ import asyncio
 import click
 import random
 import ssl
+import time
 from aiohttp import ClientSession, TCPConnector
+from datetime import datetime, timedelta
+from pytz import timezone
 from yarl import URL
 
 
@@ -23,6 +26,11 @@ async def delete_pods(settings):
 
     # Decide how many pods to bring down
     chaos_index = random.randint(0, len(pods))
+
+    if not chaos_index:
+        print("Nah ... I'll spare you today")
+
+    print("Killing {} containers!".format(chaos_index))
 
     to_kill = []
     # Decide which pods to kill
@@ -51,8 +59,13 @@ async def get_deployment_configs(settings):
 async def scale_deployment_configs(settings):
     # Get Deployment Configs
     dcs = await get_deployment_configs(settings)
-    # Decide how many pods to bring down
+    # Decide how many Deployment Configs to scale
     chaos_index = random.randint(0, len(dcs))
+
+    if not chaos_index:
+        print("Nah ... I'll spare you today")
+
+    print("Scaling {} Deployment Configs!".format(chaos_index))
 
     to_scale = {}
     keys = list(dcs.keys())
@@ -79,7 +92,7 @@ async def scale_deployment_configs(settings):
     res = await asyncio.gather(*tasks)
 
 
-async def master(settings):
+async def chaos(settings):
     # Decide action
     actions = [delete_pods, scale_deployment_configs]
     action = actions[random.randint(0, len(actions)-1)]
@@ -113,7 +126,9 @@ async def master(settings):
               help='CCPC\'s Open Shift container name')
 @click.option('-b', '--base_url', 'base_url', default='', multiple=False,
               help='Open Shift\'s base url')
-def main(verify_ssl, ca_path, token, project, own_name, base_url):
+@click.option('--timezone', 'ltimezone', default='', multiple=False,
+              help='Set the timezone for chaos framing')
+def main(verify_ssl, ca_path, token, project, own_name, base_url, ltimezone):
     # Make sure we've got https
     url = URL(base_url)
     if url.scheme != 'https':
@@ -134,7 +149,27 @@ def main(verify_ssl, ca_path, token, project, own_name, base_url):
         settings['base_url'], settings['project']
     )
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(master(settings))
+    if not ltimezone:
+        ltimezone = 'Europe/Athens'
+    localtz = timezone(ltimezone)
+    while True:
+        # Sleep random time from the morning (up to a full day)
+        t = localtz.localize(datetime.today())
+        delta = random.randint(0, 86400)
+        if t.weekday() >= 5:  # Skip weekends; It would be too cruel
+            print("Not on a weekend, I won't!")
+        elif (t+timedelta(seconds=delta)).hour < 16:  # Give them 1h to solve
+            time.sleep(delta)
+            # Spread chaos and fear in the heart of sysadmins :p
+            loop.run_until_complete(chaos(settings))
+        else:  # Not afterhours ... we're not maniacs
+            print("Lucky you ... Saved by the clock!")
+        # Sleep until the next morning
+        t = localtz.localize(datetime.today())
+        future = localtz.localize(datetime(t.year, t.month, t.day, 9, 30))
+        if t.hour >= 9:
+            future += timedelta(days=1)
+        time.sleep((future-t).total_seconds())
 
 
 if __name__ == '__main__':
