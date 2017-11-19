@@ -1,0 +1,22 @@
+FROM python:3.5-alpine
+MAINTAINER Kolokotronis Panagiots
+
+# WIP // NOT FOR PRODUCTION !!!
+
+RUN pip install ccpc
+
+# ARG VERIFY_SSL
+# ARG CA_PATH
+ARG TOKEN
+ARG PROJECT
+# ARG OWN_NAME
+ARG BASE_URL
+
+# ENV  VERIFY_SSL=$VERIFY_SSL
+# ENV  CA_PATH=$(( $CA_PATH ? $CA_PATH:'' ))
+ENV  TOKEN=$TOKEN
+ENV  PROJECT=$PROJECT
+# ENV  OWN_NAME=$(( $OWN_NAME ? $OWN_NAME:''))
+ENV  BASE_URL=$BASE_URL
+
+CMD ccpc --no-verify-ssl -b $BASE_URL -p $PROJECT -t $TOKEN
